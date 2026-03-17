@@ -65,3 +65,16 @@ CREATE TABLE IF NOT EXISTS agent_logs (
     FOREIGN KEY (session_id) REFERENCES sessions(id),
     FOREIGN KEY (message_id) REFERENCES messages(id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 知识库文档表
+CREATE TABLE IF NOT EXISTS knowledge_documents (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    filename VARCHAR(200) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size BIGINT DEFAULT 0,
+    status ENUM('processing', 'ready', 'failed') DEFAULT 'processing',
+    chunk_count INT DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

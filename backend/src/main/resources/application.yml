@@ -12,6 +12,11 @@ spring:
     password: agent123
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   data:
     redis:
       host: localhost
@@ -39,3 +44,7 @@ agent:
     url: http://localhost:8001
 deepseek:
   api-key: sk-e3cc6bb86eeb4b9198adc448579f76ef
+
+# 知识库文件上传目录
+knowledge:
+  upload-dir: ./uploads/
