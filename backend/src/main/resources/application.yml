@@ -37,3 +37,5 @@ jwt:
 agent:
   service:
     url: http://localhost:8001
+deepseek:
+  api-key: sk-e3cc6bb86eeb4b9198adc448579f76ef

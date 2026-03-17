@@ -46,6 +46,21 @@ public class SessionService {
         sessionMapper.deleteById(sessionId);
     }
 
+    public Session getSession(Long sessionId) {
+        Session session = sessionMapper.selectById(sessionId);
+        if (session == null) {
+            throw new RuntimeException("会话不存在");
+        }
+        return session;
+    }
+
+    public void updateTitle(Long sessionId, String title) {
+        Session session = new Session();
+        session.setId(sessionId);
+        session.setTitle(title);
+        sessionMapper.updateById(session);
+    }
+
     /** 更新会话最后活跃时间，在 ChatService 中调用 */
     public void touchSession(Long sessionId) {
         Session session = new Session();

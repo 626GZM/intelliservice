@@ -11,10 +11,22 @@ public class WebClientConfig {
     @Value("${agent.service.url}")
     private String agentServiceUrl;
 
+    @Value("${deepseek.api-key}")
+    private String deepseekApiKey;
+
     @Bean
     public WebClient agentWebClient() {
         return WebClient.builder()
                 .baseUrl(agentServiceUrl)
+                .build();
+    }
+
+    @Bean
+    public WebClient deepseekWebClient() {
+        return WebClient.builder()
+                .baseUrl("https://api.deepseek.com/v1")
+                .defaultHeader("Authorization", "Bearer " + deepseekApiKey)
+                .defaultHeader("Content-Type", "application/json")
                 .build();
     }
 }

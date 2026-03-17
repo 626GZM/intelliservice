@@ -26,11 +26,13 @@ public class ChatService {
 
     private static final String CACHE_KEY_PREFIX = "session:";
     private static final String CACHE_KEY_SUFFIX = ":messages";
-    private static final int MAX_HISTORY = 20;
+    private static final int MAX_HISTORY = 20;   // Redis 缓存保留条数
+    private static final int MAX_CONTEXT = 6;    // 传给 Agent 的上下文条数（3轮对话）
     private static final Duration CACHE_TTL = Duration.ofHours(24);
 
     private final MessageService messageService;
     private final SessionService sessionService;
+    private final TitleGeneratorService titleGeneratorService;
     private final StringRedisTemplate stringRedisTemplate;
     private final WebClient agentWebClient;
     private final ObjectMapper objectMapper;
@@ -40,14 +42,21 @@ public class ChatService {
         String userMessage = request.getMessage();
         String cacheKey = CACHE_KEY_PREFIX + sessionId + CACHE_KEY_SUFFIX;
 
-        // 1. 从 Redis 取会话上下文，miss 则从数据库加载并回填
+        // 1. 判断是否是第一条消息（title 还是"新对话"），在发消息前检查，避免并发重复生成
+        boolean isFirstMessage = "新对话".equals(sessionService.getSession(sessionId).getTitle());
+
+        // 2. 从 Redis 取会话上下文，miss 则从数据库加载并回填
         List<Map<String, String>> history = loadHistory(cacheKey, sessionId);
 
-        // 2. 保存用户消息到数据库
+        // 3. 保存用户消息到数据库
         messageService.saveMessage(sessionId, "user", userMessage, null, null, null);
 
-        // 3. 调用 Python Agent 服务
-        AgentChatRequest agentReq = new AgentChatRequest(sessionId, userMessage, history);
+        // 4. 调用 Python Agent 服务
+        // history 只传最近 MAX_CONTEXT 条作为上下文，当前 message 单独传
+        List<Map<String, String>> contextHistory = history.size() > MAX_CONTEXT
+                ? history.subList(history.size() - MAX_CONTEXT, history.size())
+                : new ArrayList<>(history);
+        AgentChatRequest agentReq = new AgentChatRequest(sessionId, userMessage, contextHistory);
         AgentChatResponse agentResp = agentWebClient.post()
                 .uri("/agent/chat")
                 .bodyValue(agentReq)
@@ -59,13 +68,13 @@ public class ChatService {
             throw new RuntimeException("Agent 服务无响应");
         }
 
-        // 4. 保存助手回复到数据库
+        // 5. 保存助手回复到数据库
         messageService.saveMessage(
                 sessionId, "assistant", agentResp.getReply(),
                 agentResp.getTokenCount(), agentResp.getResponseTimeMs(), agentResp.getAgentName()
         );
 
-        // 5. 更新 Redis 缓存（保留最近 MAX_HISTORY 条）
+        // 6. 更新 Redis 缓存（保留最近 MAX_HISTORY 条）
         history.add(Map.of("role", "user", "content", userMessage));
         history.add(Map.of("role", "assistant", "content", agentResp.getReply()));
         if (history.size() > MAX_HISTORY) {
@@ -73,10 +82,15 @@ public class ChatService {
         }
         saveHistory(cacheKey, history);
 
-        // 6. 更新会话 updatedAt
+        // 7. 更新会话 updatedAt
         sessionService.touchSession(sessionId);
 
-        // 7. 组装返回
+        // 8. 异步生成标题（仅第一条消息触发，不阻塞返回）
+        if (isFirstMessage) {
+            titleGeneratorService.generateAndUpdateTitle(sessionId, userMessage);
+        }
+
+        // 9. 组装返回
         ChatResponse resp = new ChatResponse();
         resp.setReply(agentResp.getReply());
         resp.setAgentName(agentResp.getAgentName());
