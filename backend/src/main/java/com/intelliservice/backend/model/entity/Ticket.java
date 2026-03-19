@@ -18,15 +18,35 @@ public class Ticket {
 
     private Long sessionId;
 
+    /** 关联订单号 */
+    private String orderNo;
+
+    /** 涉诉商户ID */
+    private Long merchantId;
+
     private String title;
 
     private String description;
 
-    /** 对应 ENUM('low','medium','high') */
+    /** low / medium / high */
     private String priority;
 
-    /** 对应 ENUM('open','processing','resolved','closed') */
+    /** open / processing / resolved / closed */
     private String status;
+
+    /** AI建议的处罚方案（JSON字符串） */
+    private String aiSuggestion;
+
+    /** 最终执行的处罚（JSON字符串） */
+    private String finalPenalty;
+
+    /** pending / ai_suggested / reviewed / executed / rejected */
+    private String reviewStatus;
+
+    /** 审阅客服ID */
+    private Long reviewedBy;
+
+    private LocalDateTime reviewedAt;
 
     private LocalDateTime createdAt;
 

@@ -31,9 +31,23 @@ public class AuthController {
         return ApiResponse.success(Map.of("token", token));
     }
 
+    /** 获取当前登录用户信息（含 role 字段） */
     @GetMapping("/me")
     public ApiResponse<UserResponse> me(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ApiResponse.error(401, "未登录");
+        }
         var user = userService.getUserByUsername(userDetails.getUsername());
+        return ApiResponse.success(UserResponse.from(user));
+    }
+
+    /**
+     * 注册管理员账号 — 仅开发/初始化环境使用。
+     * 生产环境请直接执行 SQL 或删除此接口。
+     */
+    @PostMapping("/register-admin")
+    public ApiResponse<UserResponse> registerAdmin(@RequestBody RegisterRequest request) {
+        var user = userService.registerAdmin(request);
         return ApiResponse.success(UserResponse.from(user));
     }
 }

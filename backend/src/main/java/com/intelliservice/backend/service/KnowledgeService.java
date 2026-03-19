@@ -126,6 +126,12 @@ public class KnowledgeService {
         documentMapper.deleteById(docId);
     }
 
+    /** Python Agent 回调更新文档状态 */
+    public void updateDocumentStatus(Long docId, String status, int chunkCount) {
+        updateStatus(docId, status, chunkCount);
+        log.info("文档 {} 状态回调更新: {} chunkCount={}", docId, status, chunkCount);
+    }
+
     // ------------------------------------------------------------------ //
 
     private void updateStatus(Long docId, String status, int chunkCount) {

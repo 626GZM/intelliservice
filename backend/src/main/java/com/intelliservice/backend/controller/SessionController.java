@@ -1,6 +1,7 @@
 package com.intelliservice.backend.controller;
 
 import com.intelliservice.backend.model.dto.ApiResponse;
+import com.intelliservice.backend.model.dto.CreateSessionRequest;
 import com.intelliservice.backend.model.dto.SessionDetailResponse;
 import com.intelliservice.backend.model.entity.Session;
 import com.intelliservice.backend.service.SessionService;
@@ -20,10 +21,13 @@ public class SessionController {
     private final SessionService sessionService;
     private final UserService userService;
 
+    /** 创建会话，支持可选的上下文参数 contextType / contextId */
     @PostMapping
-    public ApiResponse<Session> create(@AuthenticationPrincipal UserDetails userDetails) {
+    public ApiResponse<Session> create(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody(required = false) CreateSessionRequest req) {
         Long userId = currentUserId(userDetails);
-        return ApiResponse.success(sessionService.createSession(userId));
+        return ApiResponse.success(sessionService.createSession(userId, req));
     }
 
     @GetMapping

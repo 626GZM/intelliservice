@@ -36,6 +36,21 @@ public class UserService implements UserDetailsService {
         return user;
     }
 
+    /** 注册管理员账号（仅开发/初始化环境使用） */
+    public User registerAdmin(RegisterRequest request) {
+        if (userMapper.selectByUsername(request.getUsername()) != null) {
+            throw new RuntimeException("用户名已存在");
+        }
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setEmail(request.getEmail());
+        user.setRole("admin");
+        user.setCreatedAt(LocalDateTime.now());
+        userMapper.insert(user);
+        return user;
+    }
+
     /** 验证密码，生成 JWT Token 返回 */
     public String login(LoginRequest request) {
         User user = userMapper.selectByUsername(request.getUsername());

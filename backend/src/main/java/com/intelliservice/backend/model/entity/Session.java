@@ -18,8 +18,20 @@ public class Session {
 
     private String title;
 
-    /** 对应 ENUM('active','closed') */
+    /** active / closed */
     private String status;
+
+    /** general / product / order */
+    private String contextType;
+
+    /** 关联的 productId 或 orderNo */
+    private String contextId;
+
+    /** ai / waiting / serving / closed */
+    private String transferStatus;
+
+    /** 接手的客服ID */
+    private Long agentId;
 
     private LocalDateTime createdAt;
 

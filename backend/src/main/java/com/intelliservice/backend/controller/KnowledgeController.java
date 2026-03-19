@@ -43,4 +43,18 @@ public class KnowledgeController {
         knowledgeService.deleteDocument(id);
         return ApiResponse.success(null);
     }
+
+    /**
+     * Python Agent 回调接口：文档向量化完成后更新状态。
+     * 路径 /api/knowledge/documents/{id}/status 已在 SecurityConfig 放行，无需 JWT。
+     */
+    @PutMapping("/documents/{id}/status")
+    public ApiResponse<Void> updateStatus(@PathVariable Long id,
+                                          @RequestBody java.util.Map<String, Object> body) {
+        String status = (String) body.getOrDefault("status", "ready");
+        int chunkCount = body.containsKey("chunk_count")
+                ? ((Number) body.get("chunk_count")).intValue() : 0;
+        knowledgeService.updateDocumentStatus(id, status, chunkCount);
+        return ApiResponse.success(null);
+    }
 }
